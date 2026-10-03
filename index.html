@@ -2,8 +2,11 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Crowd Runner: Tight Margin（群衆ランナー：ギリギリ生存戦）</title>
+  <title>Crowd Runner: Tight Margin (v1.2)</title>
   <style>
     * {
       box-sizing: border-box;
@@ -45,7 +48,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 14px 18px;
+      padding: 12px 18px;
       color: #fff;
       font-weight: 800;
       pointer-events: auto;
@@ -56,7 +59,7 @@
       align-items: center;
     }
     .badge {
-      background: rgba(15, 23, 42, 0.8);
+      background: rgba(15, 23, 42, 0.85);
       backdrop-filter: blur(8px);
       padding: 7px 14px;
       border-radius: 9999px;
@@ -73,7 +76,7 @@
     .boss-badge { color: #f87171; }
 
     .btn-icon {
-      background: rgba(15, 23, 42, 0.8);
+      background: rgba(15, 23, 42, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: white;
       border-radius: 50%;
@@ -88,10 +91,10 @@
     }
     .btn-icon:active { transform: scale(0.9); }
 
-    /* Fever Meter Center HUD */
+    /* FEVER COMBO METER */
     #fever-container {
       position: absolute;
-      top: 60px;
+      top: 56px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
@@ -101,9 +104,9 @@
       transition: all 0.3s ease;
     }
     .fever-bar-bg {
-      width: 180px;
+      width: 190px;
       height: 12px;
-      background: rgba(15, 23, 42, 0.8);
+      background: rgba(15, 23, 42, 0.85);
       border-radius: 9999px;
       border: 2px solid rgba(255, 255, 255, 0.3);
       overflow: hidden;
@@ -126,19 +129,18 @@
     }
     .fever-active .fever-bar-fill {
       background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
-      animation: feverRainbow 0.6s linear infinite;
     }
     .fever-active .fever-text {
       color: #38bdf8;
-      font-size: 15px;
+      font-size: 14px;
       animation: pulse 0.4s ease-in-out infinite alternate;
     }
     @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.15); } }
 
-    /* Boss HP Bar in 3D / Screen Overlay */
+    /* BOSS HP BAR */
     #boss-hp-container {
       position: absolute;
-      top: 110px;
+      top: 105px;
       left: 50%;
       transform: translateX(-50%);
       display: none;
@@ -150,14 +152,14 @@
     .boss-name {
       color: #ef4444;
       font-weight: 900;
-      font-size: 18px;
+      font-size: 17px;
       letter-spacing: 2px;
       text-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
     .boss-hp-bg {
       width: 280px;
-      height: 18px;
+      height: 16px;
       background: rgba(15, 23, 42, 0.85);
       border: 2px solid #ef4444;
       border-radius: 9999px;
@@ -236,14 +238,14 @@
       background: #1e293b;
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 24px;
-      padding: 32px 38px;
+      padding: 30px 36px;
       text-align: center;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
       max-width: 440px;
       width: 90%;
     }
     .modal-title {
-      font-size: 30px;
+      font-size: 28px;
       font-weight: 900;
       margin-bottom: 8px;
       letter-spacing: -0.5px;
@@ -260,13 +262,13 @@
       color: #94a3b8;
       font-size: 14px;
       line-height: 1.5;
-      margin-bottom: 22px;
+      margin-bottom: 20px;
     }
     .modal-stats {
       background: rgba(15, 23, 42, 0.6);
       border-radius: 14px;
       padding: 12px 16px;
-      margin-bottom: 22px;
+      margin-bottom: 20px;
       display: flex;
       justify-content: space-around;
       color: #cbd5e1;
@@ -283,8 +285,8 @@
       background: linear-gradient(135deg, #0284c7, #2563eb);
       color: white;
       border: none;
-      padding: 14px 34px;
-      font-size: 17px;
+      padding: 13px 34px;
+      font-size: 16px;
       font-weight: 800;
       border-radius: 9999px;
       cursor: pointer;
@@ -297,12 +299,11 @@
     }
     .btn-action:active { transform: translateY(1px); }
 
-    /* Controls guide */
     .controls-hint {
       text-align: center;
       color: rgba(255, 255, 255, 0.65);
       font-size: 13px;
-      padding-bottom: 16px;
+      padding-bottom: 14px;
       font-weight: 600;
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
       pointer-events: none;
@@ -313,7 +314,7 @@
       background: rgba(15, 23, 42, 0.5);
       border-radius: 16px;
       padding: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
     .shop-title {
@@ -334,7 +335,7 @@
       border: 2px solid transparent;
       color: #f1f5f9;
       border-radius: 12px;
-      padding: 8px 10px;
+      padding: 7px 10px;
       font-size: 12px;
       font-weight: 700;
       cursor: pointer;
@@ -374,7 +375,7 @@
       padding: 16px;
     }
     #start-overlay h1 {
-      font-size: 34px;
+      font-size: 32px;
       font-weight: 900;
       letter-spacing: -1px;
       background: linear-gradient(135deg, #38bdf8, #818cf8);
@@ -387,7 +388,7 @@
       max-width: 440px;
       font-size: 13px;
       line-height: 1.5;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
     .rule-box {
       background: rgba(30, 41, 59, 0.7);
@@ -398,7 +399,7 @@
       text-align: left;
       font-size: 12px;
       color: #cbd5e1;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       line-height: 1.6;
     }
     .rule-box strong { color: #38bdf8; }
@@ -406,7 +407,7 @@
       display: flex;
       gap: 10px;
       justify-content: center;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
     .btn-upgrade {
       background: #1e293b;
@@ -433,7 +434,7 @@
   <div id="ui-layer">
     <div class="top-bar">
       <div class="hud-group">
-        <div class="badge stage-badge" id="hud-stage">STAGE 1</div>
+        <div class="badge stage-badge" id="hud-stage">STAGE 1 (v1.2)</div>
         <div class="badge coin-badge">🪙 <span id="hud-coins">0</span></div>
       </div>
       <div class="hud-group">
@@ -470,8 +471,8 @@
 
   <!-- Start Screen -->
   <div id="start-overlay">
-    <h1>CROWD RUNNER<br><span style="font-size: 22px; color: #93c5fd;">TIGHT MARGIN : BOSS ASSAULT</span></h1>
-    <p>ギリギリの計算で大軍勢を作り、最後の巨大メガボスを撃破せよ！</p>
+    <h1>CROWD RUNNER<br><span style="font-size: 20px; color: #93c5fd;">TIGHT MARGIN : BOSS ASSAULT (v1.2)</span></h1>
+    <p>手足を振って走る群衆を率い、最後の巨大メガボスを撃破せよ！</p>
     
     <div class="rule-box">
       ・<strong>巨大メガボス撃破戦</strong>：ゴールで待ち受けるタイタンボスのHPを群衆突撃で削り切れ！<br>
@@ -742,7 +743,7 @@
     };
 
     /* ============================================================
-       3. THREE.JS 3D SCENE & MODELS
+       3. THREE.JS 3D SCENE & CLEAR HUMAN CHARACTER MODELING
        ============================================================ */
     const ROAD_WIDTH = 14;
     const ROAD_BOUND_X = ROAD_WIDTH / 2 - 1.2;
@@ -751,9 +752,8 @@
     const STEER_LERP = 0.18;
 
     let currentStage = 1;
-    let gameState = 'START'; // 'START' | 'RUNNING' | 'BATTLE_MINIONS' | 'BATTLE_BOSS' | 'RESULT'
+    let gameState = 'START';
 
-    // Fever System State
     let feverCombo = 0;
     const FEVER_COMBO_TARGET = 3;
     let isFeverActive = false;
@@ -777,7 +777,7 @@
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
     dirLight.position.set(20, 50, 25);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 1024;
@@ -792,13 +792,25 @@
 
     let cameraShake = 0;
 
-    /* --- HUMAN CHARACTER CREATOR --- */
-    const headGeo = new THREE.SphereGeometry(0.24, 12, 10);
-    const torsoGeo = new THREE.CylinderGeometry(0.22, 0.18, 0.55, 10);
-    const limbGeo = new THREE.CylinderGeometry(0.08, 0.07, 0.45, 8);
-    limbGeo.translate(0, -0.2, 0);
+    /* --- PROMINENT HUMAN CHARACTER WITH VISIBLE HANDS & FEET --- */
+    // Geometries
+    const headGeo = new THREE.SphereGeometry(0.32, 12, 10);
+    const torsoGeo = new THREE.CylinderGeometry(0.28, 0.24, 0.65, 10);
+    // Limbs: Pivot at shoulder and hip (translate Y so top is 0)
+    const armGeo = new THREE.CylinderGeometry(0.1, 0.08, 0.55, 8);
+    armGeo.translate(0, -0.27, 0);
+    const handGeo = new THREE.SphereGeometry(0.12, 8, 8);
+    handGeo.translate(0, -0.55, 0);
 
-    const skinToneMat = new THREE.MeshStandardMaterial({ color: 0xffdbac, roughness: 0.5 });
+    const legGeo = new THREE.CylinderGeometry(0.11, 0.09, 0.6, 8);
+    legGeo.translate(0, -0.3, 0);
+    const footGeo = new THREE.BoxGeometry(0.16, 0.12, 0.28);
+    footGeo.translate(0, -0.6, -0.06);
+
+    // Materials
+    const skinToneMat = new THREE.MeshStandardMaterial({ color: 0xffdfba, roughness: 0.5 });
+    const whiteShoeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+    const darkShoeMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4 });
     const crownMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.6, roughness: 0.2 });
     const ninjaBandMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.4 });
     const hornMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.4 });
@@ -806,59 +818,96 @@
     function createHumanMesh(isAlly = true, skinId = 'classic') {
       const group = new THREE.Group();
       const suitColor = isAlly ? (SKINS[skinId]?.color || 0x0284c7) : 0xef4444;
-      const suitMat = new THREE.MeshStandardMaterial({ color: suitColor, roughness: 0.4, metalness: 0.15 });
+      const suitMat = new THREE.MeshStandardMaterial({ color: suitColor, roughness: 0.35, metalness: 0.15 });
 
+      // Torso
       const torso = new THREE.Mesh(torsoGeo, suitMat);
-      torso.position.y = 0.65;
+      torso.position.y = 0.85;
       torso.castShadow = true;
       group.add(torso);
 
+      // Head
       const head = new THREE.Mesh(headGeo, skinToneMat);
-      head.position.y = 1.05;
+      head.position.y = 1.35;
       head.castShadow = true;
       group.add(head);
 
+      // Eyes on head (facing negative Z forward)
+      const eyeGeo = new THREE.SphereGeometry(0.04, 6, 6);
+      const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+      const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
+      eyeL.position.set(-0.1, 1.38, -0.3);
+      const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
+      eyeR.position.set(0.1, 1.38, -0.3);
+      group.add(eyeL);
+      group.add(eyeR);
+
+      // Accessories
       if (isAlly) {
         const hatType = SKINS[skinId]?.hat;
         if (hatType === 'crown') {
-          const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.22, 0.15, 6), crownMat);
-          crown.position.set(0, 1.25, 0);
+          const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.26, 0.2, 6), crownMat);
+          crown.position.set(0, 1.62, 0);
           group.add(crown);
         } else if (hatType === 'ninja') {
-          const band = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.05, 6, 12), ninjaBandMat);
+          const band = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.06, 6, 12), ninjaBandMat);
           band.rotation.x = Math.PI / 2;
-          band.position.set(0, 1.08, 0);
+          band.position.set(0, 1.4, 0);
           group.add(band);
         } else if (hatType === 'viking') {
-          const hornL = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.25, 6), hornMat);
-          hornL.position.set(-0.25, 1.18, 0);
+          const hornL = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.3, 6), hornMat);
+          hornL.position.set(-0.32, 1.5, 0);
           hornL.rotation.z = 0.5;
-          const hornR = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.25, 6), hornMat);
-          hornR.position.set(0.25, 1.18, 0);
+          const hornR = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.3, 6), hornMat);
+          hornR.position.set(0.32, 1.5, 0);
           hornR.rotation.z = -0.5;
           group.add(hornL);
           group.add(hornR);
         }
       }
 
-      const leftArm = new THREE.Mesh(limbGeo, suitMat);
-      leftArm.position.set(-0.3, 0.85, 0);
-      leftArm.castShadow = true;
+      // Left Arm with Skin Hand
+      const leftArm = new THREE.Group();
+      leftArm.position.set(-0.42, 1.1, 0);
+      const leftArmLimb = new THREE.Mesh(armGeo, suitMat);
+      leftArmLimb.castShadow = true;
+      const leftHand = new THREE.Mesh(handGeo, skinToneMat);
+      leftHand.castShadow = true;
+      leftArm.add(leftArmLimb);
+      leftArm.add(leftHand);
       group.add(leftArm);
 
-      const rightArm = new THREE.Mesh(limbGeo, suitMat);
-      rightArm.position.set(0.3, 0.85, 0);
-      rightArm.castShadow = true;
+      // Right Arm with Skin Hand
+      const rightArm = new THREE.Group();
+      rightArm.position.set(0.42, 1.1, 0);
+      const rightArmLimb = new THREE.Mesh(armGeo, suitMat);
+      rightArmLimb.castShadow = true;
+      const rightHand = new THREE.Mesh(handGeo, skinToneMat);
+      rightHand.castShadow = true;
+      rightArm.add(rightArmLimb);
+      rightArm.add(rightHand);
       group.add(rightArm);
 
-      const leftLeg = new THREE.Mesh(limbGeo, suitMat);
-      leftLeg.position.set(-0.14, 0.4, 0);
-      leftLeg.castShadow = true;
+      // Left Leg with White Sneaker Shoe
+      const leftLeg = new THREE.Group();
+      leftLeg.position.set(-0.18, 0.58, 0);
+      const leftLegLimb = new THREE.Mesh(legGeo, suitMat);
+      leftLegLimb.castShadow = true;
+      const leftShoe = new THREE.Mesh(footGeo, isAlly ? whiteShoeMat : darkShoeMat);
+      leftShoe.castShadow = true;
+      leftLeg.add(leftLegLimb);
+      leftLeg.add(leftShoe);
       group.add(leftLeg);
 
-      const rightLeg = new THREE.Mesh(limbGeo, suitMat);
-      rightLeg.position.set(0.14, 0.4, 0);
-      rightLeg.castShadow = true;
+      // Right Leg with White Sneaker Shoe
+      const rightLeg = new THREE.Group();
+      rightLeg.position.set(0.18, 0.58, 0);
+      const rightLegLimb = new THREE.Mesh(legGeo, suitMat);
+      rightLegLimb.castShadow = true;
+      const rightShoe = new THREE.Mesh(footGeo, isAlly ? whiteShoeMat : darkShoeMat);
+      rightShoe.castShadow = true;
+      rightLeg.add(rightLegLimb);
+      rightLeg.add(rightShoe);
       group.add(rightLeg);
 
       return { root: group, leftArm, rightArm, leftLeg, rightLeg, head };
@@ -867,27 +916,26 @@
     /* --- MEGA BOSS MODEL (TITAN GOLEM) --- */
     function createMegaBossMesh() {
       const group = new THREE.Group();
-      const bossColor = 0xb91c1c; // Deep Red Titan
       const bossMat = new THREE.MeshStandardMaterial({
-        color: bossColor,
+        color: 0xb91c1c,
         roughness: 0.35,
         metalness: 0.3,
         emissive: 0x450a0a
       });
       const darkPlateMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4 });
 
-      // Huge Torso
+      // Torso
       const torso = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4.5, 2.5), bossMat);
       torso.position.y = 5.0;
       torso.castShadow = true;
       group.add(torso);
 
-      // Armor chestplate
+      // Chestplate
       const plate = new THREE.Mesh(new THREE.BoxGeometry(3.0, 3.0, 0.6), darkPlateMat);
       plate.position.set(0, 5.2, 1.3);
       group.add(plate);
 
-      // Huge Head with Glowing Horns
+      // Head
       const head = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.8, 1.8), bossMat);
       head.position.set(0, 8.0, 0);
       head.castShadow = true;
@@ -904,7 +952,7 @@
       hornR.rotation.z = -0.6;
       group.add(hornR);
 
-      // Glowing Red Eyes
+      // Eyes
       const eyeGeo = new THREE.BoxGeometry(0.4, 0.2, 0.2);
       const eyeMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
       const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
@@ -914,7 +962,7 @@
       group.add(eyeL);
       group.add(eyeR);
 
-      // Massive Arms
+      // Arms
       const armGeo = new THREE.BoxGeometry(1.2, 4.0, 1.2);
       const leftArm = new THREE.Mesh(armGeo, bossMat);
       leftArm.position.set(-2.5, 4.5, 0);
@@ -926,7 +974,7 @@
       rightArm.castShadow = true;
       group.add(rightArm);
 
-      // Huge Legs
+      // Legs
       const legGeo = new THREE.BoxGeometry(1.4, 3.2, 1.4);
       const leftLeg = new THREE.Mesh(legGeo, darkPlateMat);
       leftLeg.position.set(-1.1, 1.6, 0);
@@ -943,7 +991,7 @@
 
     /* --- PARTICLE BURST SYSTEM --- */
     const particles = [];
-    const pGeo = new THREE.BoxGeometry(0.14, 0.14, 0.14);
+    const pGeo = new THREE.BoxGeometry(0.15, 0.15, 0.15);
 
     function spawnBurst(x, y, z, colorHex = 0x38bdf8, count = 10, scale = 1.0) {
       const pMat = new THREE.MeshBasicMaterial({ color: colorHex });
@@ -979,7 +1027,7 @@
     }
 
     /* ============================================================
-       4. GAME STATE & ENTITIES (GATES, SPLIT PATHS, BOSS)
+       4. GAME STATE & ENTITIES
        ============================================================ */
     const playerAnchor = { x: 0, z: 0, targetX: 0 };
     let allies = [];
@@ -992,7 +1040,6 @@
     let coins = [];
     let roadMeshes = [];
     let goalMesh = null;
-    let initialMinionCount = 0;
     let battleTimer = 0;
     let stageCoinsCollected = 0;
 
@@ -1019,12 +1066,11 @@
       ctx.strokeStyle = '#ffffff';
       ctx.stroke();
 
-      // Top label banner (e.g. ⚠️ HIGH RISK or 🛡️ SAFE)
       if (bannerText) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
         ctx.fillRect(16, 16, 480, 50);
         ctx.fillStyle = '#fef08a';
-        ctx.font = 'bold 32px "Segoe UI", Arial, sans-serif';
+        ctx.font = 'bold 30px "Segoe UI", Arial, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(bannerText, 256, 52);
       }
@@ -1042,15 +1088,13 @@
       return texture;
     }
 
-    /* --- STAGE REVERSE GENERATOR (WITH HIGH-RISK SPLIT & MEGA BOSS) --- */
+    /* --- STAGE REVERSE GENERATOR --- */
     function generateStageData(stageNum) {
       const gateCount = 5 + Math.min(2, Math.floor((stageNum - 1) / 2));
       let pCurrent = saveData.initialCrowdCount;
       const gatePairs = [];
       let multCount = 0;
       const maxMults = 3;
-
-      // Pick one intermediate gate to be a "FORK IN THE ROAD (HIGH-RISK / HIGH-RETURN)"
       const splitGateIndex = 2; // Gate #3 is the dramatic fork
 
       for (let i = 0; i < gateCount; i++) {
@@ -1067,8 +1111,6 @@
         let rightBanner = null;
 
         if (isFork) {
-          // FORK: High Risk (×3) vs Safe (+5)
-          // In reverse logic: High Risk is the TRUE optimal path needed for boss victory!
           correctOp = '×';
           correctVal = (pCurrent <= 8) ? 3 : 2;
           pNext = pCurrent * correctVal;
@@ -1093,9 +1135,7 @@
             left: { op: isLeftHighRisk ? correctOp : wrongOp, val: isLeftHighRisk ? correctVal : wrongVal, banner: leftBanner },
             right: { op: !isLeftHighRisk ? correctOp : wrongOp, val: !isLeftHighRisk ? correctVal : wrongVal, banner: rightBanner }
           });
-
         } else {
-          // Standard gate calculation
           let opType = 'add';
           if (pCurrent < 25 && multCount < maxMults && Math.random() < 0.65) {
             opType = 'mult';
@@ -1116,7 +1156,6 @@
             pNext = pCurrent + addVal;
           }
 
-          // Wrong gate
           if (correctOp === '×') {
             if (pCurrent > 8 && Math.random() < 0.35) {
               wrongOp = '-';
@@ -1158,9 +1197,7 @@
         pCurrent = pNext;
       }
 
-      // Boss and Minion balance:
-      // Half of the army clashes with minion vanguard, remainder assaults Mega Boss!
-      const margin = 1 + Math.floor(Math.random() * 3); // 1 to 3 survivors
+      const margin = 1 + Math.floor(Math.random() * 3);
       const minionCount = Math.floor(pCurrent * 0.4);
       const bossHealth = (pCurrent - minionCount) - margin;
 
@@ -1174,7 +1211,7 @@
       };
     }
 
-    /* --- ENVIRONMENT & TRACK BUILDER --- */
+    /* --- ENVIRONMENT BUILDER --- */
     function buildEnvironment(stageData) {
       roadMeshes.forEach(m => scene.remove(m));
       roadMeshes = [];
@@ -1216,7 +1253,6 @@
       scene.add(rightRail);
       roadMeshes.push(rightRail);
 
-      // Track Grid Lines
       const gridHelper = new THREE.GridHelper(ROAD_WIDTH, 7, 0x334155, 0x1e293b);
       gridHelper.position.set(0, 0.02, road.position.z);
       gridHelper.scale.set(1, 1, totalLength / ROAD_WIDTH);
@@ -1238,7 +1274,6 @@
         centerPost.position.set(0, (gateHeight + 1) / 2, 0);
         pairGroup.add(centerPost);
 
-        // Left Gate
         const leftText = pairData.left.op + pairData.left.val;
         const leftMat = new THREE.MeshBasicMaterial({
           map: createGateTexture(leftText, pairData.left.op !== '-', pairData.left.banner),
@@ -1250,7 +1285,6 @@
         leftPanel.position.set(-ROAD_WIDTH / 4, gateHeight / 2, 0);
         pairGroup.add(leftPanel);
 
-        // Right Gate
         const rightText = pairData.right.op + pairData.right.val;
         const rightMat = new THREE.MeshBasicMaterial({
           map: createGateTexture(rightText, pairData.right.op !== '-', pairData.right.banner),
@@ -1275,7 +1309,7 @@
         });
       });
 
-      // Rotating Bar Traps & Floating Coins between gates
+      // Rotating Bar Traps & Coins
       const coinGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.12, 16);
       coinGeo.rotateX(Math.PI / 2);
       const coinMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.8, roughness: 0.2 });
@@ -1284,13 +1318,11 @@
         const midZ = -(i + 0.5) * GATE_DISTANCE;
         const pair = stageData.gatePairs[i];
 
-        // If next gate is a fork, spawn DANGER hazards on the High Risk side!
         const trapCount = pair.isFork ? 2 : 1;
         for (let t = 0; t < trapCount; t++) {
           const trapGroup = new THREE.Group();
           let trapX = (Math.random() - 0.5) * (ROAD_WIDTH - 6);
           if (pair.isFork) {
-            // Place directly in front of the high-risk gate to test player skills!
             trapX = pair.isLeftCorrect ? (-ROAD_WIDTH / 4 + (t === 0 ? -1 : 1)) : (ROAD_WIDTH / 4 + (t === 0 ? -1 : 1));
           }
           trapGroup.position.set(trapX, 0.5, midZ + t * 4);
@@ -1319,7 +1351,6 @@
           });
         }
 
-        // Coins (High-Risk forks have DOUBLE coins!)
         const coinCount = pair.isFork ? 6 : 3;
         const coinPatternX = pair.isFork ? (pair.isLeftCorrect ? -ROAD_WIDTH / 4 : ROAD_WIDTH / 4) : ((Math.random() - 0.5) * 6);
         for (let c = 0; c < coinCount; c++) {
@@ -1338,7 +1369,6 @@
       goalMesh.position.set(0, 0.15, goalZ - 12);
       scene.add(goalMesh);
 
-      // Finish line ribbon
       const finishGeo = new THREE.PlaneGeometry(ROAD_WIDTH, 1.2);
       const finishMat = new THREE.MeshBasicMaterial({ color: 0xef4444, side: THREE.DoubleSide });
       const finishLine = new THREE.Mesh(finishGeo, finishMat);
@@ -1358,7 +1388,7 @@
       const count = allies.length;
       if (count === 0) return;
       const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-      const spreadFactor = 0.36;
+      const spreadFactor = 0.42;
 
       allies.forEach((ally, i) => {
         if (i === 0) {
@@ -1387,8 +1417,7 @@
           charObj,
           targetOffsetX: 0,
           targetOffsetZ: 0,
-          runPhase: Math.random() * Math.PI * 2,
-          jumpProgress: 0
+          runPhase: Math.random() * Math.PI * 2
         });
       }
       updateCrowdFormation();
@@ -1409,10 +1438,9 @@
     function spawnMinions(count, goalZ) {
       enemies.forEach(e => scene.remove(e.charObj.root));
       enemies = [];
-      initialMinionCount = count;
 
       const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-      const spreadFactor = 0.35;
+      const spreadFactor = 0.4;
 
       for (let i = 0; i < count; i++) {
         const charObj = createHumanMesh(false);
@@ -1459,7 +1487,6 @@
       showPopText('🔥 FEVER DASH!', true, playerAnchor.x, 1, playerAnchor.z, true);
     }
 
-    /* --- FLOATING NOTIFICATION POP TEXT --- */
     function showPopText(text, isPositive, x, y, z, isFever = false) {
       const tempV = new THREE.Vector3(x, y + 2, z);
       tempV.project(camera);
@@ -1483,7 +1510,7 @@
     function initStage(stageNum) {
       currentStage = stageNum;
       stageCoinsCollected = 0;
-      document.getElementById('hud-stage').textContent = `STAGE ${currentStage}`;
+      document.getElementById('hud-stage').textContent = `STAGE ${currentStage} (v1.2)`;
 
       playerAnchor.x = 0;
       playerAnchor.targetX = 0;
@@ -1498,13 +1525,9 @@
 
       buildEnvironment(currentStageData);
 
-      // Spawn initial crowd
       addAllies(saveData.initialCrowdCount);
-
-      // Spawn vanguard minions
       spawnMinions(currentStageData.minionCount, currentStageData.goalZ);
 
-      // Boss UI & setup
       document.getElementById('hud-enemy').textContent = `MEGA BOSS: ${bossHp} HP`;
       document.getElementById('boss-hp-container').style.display = 'none';
       document.getElementById('boss-hp-fill').style.width = '100%';
@@ -1512,7 +1535,6 @@
       camera.position.set(0, 8, 12);
       camera.lookAt(0, 1.5, 0);
 
-      // Reset fever & states
       feverCombo = 0;
       isFeverActive = false;
       feverTimer = 0;
@@ -1607,7 +1629,6 @@
         sound.gatePositive();
         showPopText(`+${diff}!`, true, playerAnchor.x, 1, playerAnchor.z);
 
-        // FEVER COMBO ACCUMULATION
         if (isCorrect) {
           feverCombo++;
           if (feverCombo >= FEVER_COMBO_TARGET && !isFeverActive) {
@@ -1638,7 +1659,6 @@
 
         if (dist < trap.radius + 1.2 && Math.abs(dz) < 1.2) {
           if (isFeverActive) {
-            // SMASH TRAP IN FEVER!
             trap.destroyed = true;
             scene.remove(trap.mesh);
             sound.smashTrap();
@@ -1650,7 +1670,6 @@
             saveToStorage();
             updateCoinHUD();
           } else {
-            // Normal hit: lose 2 allies & reset combo
             if (allies.length > 1) {
               removeAllies(2);
               sound.hitTrap();
@@ -1741,7 +1760,7 @@
       countTagContainer.style.display = 'block';
       countTagNum.textContent = allies.length;
 
-      tempVec3.set(playerAnchor.x, 2.3, playerAnchor.z);
+      tempVec3.set(playerAnchor.x, 2.6, playerAnchor.z);
       tempVec3.project(camera);
 
       const screenX = (tempVec3.x * 0.5 + 0.5) * window.innerWidth;
@@ -1762,14 +1781,11 @@
       const dt = Math.min((currentTime - lastTime) / 1000, 0.1);
       lastTime = currentTime;
 
-      // Update particles
       updateParticles(dt);
 
-      // Rotate Coins & Traps
       coins.forEach(c => { if (!c.collected) c.mesh.rotation.z += dt * 3.5; });
       traps.forEach(t => { if (!t.destroyed) t.spinner.rotation.y += dt * t.rotSpeed; });
 
-      // Handle Fever countdown
       if (isFeverActive) {
         feverTimer -= dt;
         if (feverTimer <= 0) {
@@ -1784,16 +1800,13 @@
       if (gameState === 'RUNNING') {
         processKeyboard(dt);
 
-        // Advance Anchor
         playerAnchor.z -= currentRunSpeed * dt;
         playerAnchor.x += (playerAnchor.targetX - playerAnchor.x) * STEER_LERP;
 
-        // Check Interactions
         checkGateCollisions();
         checkTrapCollisions();
         checkCoinCollisions();
 
-        // Check Goal: First clash with minions
         if (currentStageData && playerAnchor.z <= currentStageData.goalZ) {
           gameState = 'BATTLE_MINIONS';
           document.getElementById('boss-hp-container').style.display = 'flex';
@@ -1810,11 +1823,11 @@
           const root = ally.charObj.root;
           root.position.x += (targetWorldX - root.position.x) * 0.22;
           root.position.z += (targetWorldZ - root.position.z) * 0.22;
-          root.position.y = Math.abs(Math.sin(ally.runPhase)) * 0.22;
+          root.position.y = Math.abs(Math.sin(ally.runPhase)) * 0.25;
           root.scale.setScalar(scaleTarget);
 
-          // Limbs swing
-          const swing = Math.sin(ally.runPhase) * 0.75;
+          // Clear running arm & leg swing
+          const swing = Math.sin(ally.runPhase) * 0.9;
           ally.charObj.leftArm.rotation.x = swing;
           ally.charObj.rightArm.rotation.x = -swing;
           ally.charObj.leftLeg.rotation.x = -swing;
@@ -1825,7 +1838,7 @@
         enemies.forEach(enemy => {
           enemy.phase += dt * 4;
           enemy.charObj.root.position.y = Math.abs(Math.sin(enemy.phase)) * 0.1;
-          const idleSwing = Math.sin(enemy.phase) * 0.2;
+          const idleSwing = Math.sin(enemy.phase) * 0.3;
           enemy.charObj.leftArm.rotation.x = idleSwing;
           enemy.charObj.rightArm.rotation.x = -idleSwing;
         });
@@ -1853,7 +1866,6 @@
         camera.lookAt(playerAnchor.x * 0.3, 1.2, playerAnchor.z - 6);
 
       } else if (gameState === 'BATTLE_MINIONS') {
-        // Step 1: Minions Vanguard clash
         battleTimer += dt;
         const stepInterval = 1 / 35;
 
@@ -1877,13 +1889,11 @@
           document.getElementById('crowd-count-num').textContent = allies.length;
         }
 
-        // Camera moves closer to Mega Boss
         camera.position.z += ((currentStageData.goalZ - 4) - camera.position.z) * 0.08;
         camera.position.y += (7 - camera.position.y) * 0.08;
         camera.lookAt(0, 4.0, currentStageData.goalZ - 18);
 
         if (enemies.length === 0) {
-          // Transition to Mega Boss Assault!
           gameState = 'BATTLE_BOSS';
           battleTimer = 0;
           sound.bossRoar();
@@ -1892,7 +1902,6 @@
         }
 
       } else if (gameState === 'BATTLE_BOSS') {
-        // Step 2: MEGA BOSS ASSAULT (Allies jump and strike the Titan!)
         battleTimer += dt;
         const stepInterval = 1 / 24;
 
@@ -1901,7 +1910,6 @@
 
           const attacker = allies.pop();
           if (attacker) {
-            // Strike effect
             bossHp--;
             document.getElementById('boss-hp-fill').style.width = `${(bossHp / bossMaxHp) * 100}%`;
             document.getElementById('hud-enemy').textContent = `MEGA BOSS: ${bossHp} HP`;
@@ -1911,8 +1919,6 @@
 
             sound.bossHit();
             cameraShake = 0.35;
-
-            // Boss hurt shake
             megaBoss.root.position.x = (Math.random() - 0.5) * 0.8;
           }
 
@@ -1923,7 +1929,6 @@
         camera.lookAt(0, 4.5, currentStageData.goalZ - 18);
 
         if (bossHp <= 0) {
-          // Boss explosion
           spawnBurst(megaBoss.root.position.x, 5, megaBoss.root.position.z, 0xf59e0b, 30, 2.5);
           scene.remove(megaBoss.root);
           triggerVictory(allies.length);
