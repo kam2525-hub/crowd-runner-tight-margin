@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Crowd Runner: Tight Margin（群衆ランナー：ギリギリ生存戦）</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    /* UI Overlay */
+    #ui-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Top HUD */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      color: #fff;
+      font-weight: 700;
+    }
+    .badge {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(8px);
+      padding: 8px 18px;
+      border-radius: 9999px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      font-size: 15px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .stage-badge {
+      color: #38bdf8;
+    }
+    .enemy-badge {
+      color: #f87171;
+    }
+
+    /* Player Count floating banner */
+    #count-display-container {
+      position: absolute;
+      transform: translate(-50%, -100%);
+      pointer-events: none;
+      transition: transform 0.05s ease-out;
+    }
+    .crowd-count-tag {
+      background: #0284c7;
+      color: #fff;
+      font-weight: 900;
+      font-size: 18px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      border: 2px solid #e0f2fe;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.5);
+      white-space: nowrap;
+    }
+
+    /* Modal / Result Overlay */
+    .modal-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.35s ease, visibility 0.35s ease;
+    }
+    .modal-backdrop.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal-card {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 36px 48px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      max-width: 420px;
+      width: 90%;
+    }
+    .modal-title {
+      font-size: 32px;
+      font-weight: 900;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+    .modal-title.win {
+      color: #38bdf8;
+      text-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+    }
+    .modal-title.lose {
+      color: #f87171;
+      text-shadow: 0 0 20px rgba(248, 113, 113, 0.5);
+    }
+    .modal-subtitle {
+      color: #94a3b8;
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+    .modal-stats {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-around;
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+    .modal-stats span {
+      font-weight: 800;
+      color: #f8fafc;
+      font-size: 18px;
+      display: block;
+    }
+    .btn-action {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: white;
+      border: none;
+      padding: 14px 36px;
+      font-size: 18px;
+      font-weight: 800;
+      border-radius: 9999px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s;
+    }
+    .btn-action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(37, 99, 235, 0.55);
+    }
+    .btn-action:active {
+      transform: translateY(1px);
+    }
+
+    /* Controls guide */
+    .controls-hint {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 13px;
+      padding-bottom: 20px;
+      font-weight: 500;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+      pointer-events: none;
+    }
+
+    /* Start Screen */
+    #start-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 150;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    #start-overlay h1 {
+      font-size: 40px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+    #start-overlay p {
+      color: #94a3b8;
+      max-width: 480px;
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+    .rule-box {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 16px 24px;
+      max-width: 420px;
+      text-align: left;
+      font-size: 13px;
+      color: #cbd5e1;
+      margin-bottom: 32px;
+      line-height: 1.7;
+    }
+    .rule-box strong {
+      color: #38bdf8;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <div id="ui-layer">
+    <div class="top-bar">
+      <div class="badge stage-badge" id="hud-stage">STAGE 1</div>
+      <div class="badge enemy-badge" id="hud-enemy">GOAL ENEMY: ??</div>
+    </div>
+
+    <div class="controls-hint" id="controls-hint">
+      マウス移動 / ドラッグ / [A][D] または [←][→] で左右操作
+    </div>
+  </div>
+
+  <!-- Player crowd count floating indicator -->
+  <div id="count-display-container">
+    <div class="crowd-count-tag" id="crowd-count-num">1</div>
+  </div>
+
+  <!-- Start Screen -->
+  <div id="start-overlay">
+    <h1>CROWD RUNNER<br><span style="font-size: 26px; color: #93c5fd;">TIGHT MARGIN</span></h1>
+    <p>完璧なルートを選び抜き、ギリギリの生存戦を勝ち抜け！</p>
+    <div class="rule-box">
+      ・左右の演算ゲートを通過して味方の群衆を増やそう。<br>
+      ・<strong>「すべてのゲートで正解を選んだ時のみ」</strong>、残数1〜3体でギリギリ勝利できる逆算難易度！<br>
+      ・1度でもハズレを選ぶと最終的に全滅確定…瞬時の計算が命運を分ける！
+    </div>
+    <button class="btn-action" id="btn-start">GAME START</button>
+  </div>
+
+  <!-- Result Modal -->
+  <div class="modal-backdrop" id="modal-result">
+    <div class="modal-card">
+      <h2 class="modal-title" id="result-title">STAGE CLEAR!</h2>
+      <p class="modal-subtitle" id="result-desc">完璧な計算で見事勝利しました！</p>
+      <div class="modal-stats">
+        <div>残り味方<span id="stat-allies">2</span></div>
+        <div>敵撃破数<span id="stat-enemies">85</span></div>
+      </div>
+      <button class="btn-action" id="btn-retry">NEXT STAGE</button>
+    </div>
+  </div>
+
+  <script>
+    /* --- GAME CONFIG & CONSTANTS --- */
+    const ROAD_WIDTH = 14;
+    const ROAD_BOUND_X = ROAD_WIDTH / 2 - 1.2;
+    const GATE_DISTANCE = 42;
+    const RUN_SPEED = 28; // 前進速度
+    const STEER_LERP = 0.18; // 左右移動のスムーズ補間
+    const BATTLE_RATE = 28; // 相殺速度 (体/秒)
+
+    let currentStage = 1;
+    let gameState = 'START'; // 'START' | 'RUNNING' | 'BATTLE' | 'RESULT'
+
+    // Scene & Three setup
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0f172a);
+    scene.fog = new THREE.Fog(0x0f172a, 40, 220);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 400);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
+    dirLight.position.set(20, 45, 25);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
+    dirLight.shadow.camera.near = 0.5;
+    dirLight.shadow.camera.far = 150;
+    dirLight.shadow.camera.left = -25;
+    dirLight.shadow.camera.right = 25;
+    dirLight.shadow.camera.top = 25;
+    dirLight.shadow.camera.bottom = -25;
+    scene.add(dirLight);
+
+    // Shared character geometries and materials
+    const bodyGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.85, 12);
+    const headGeo = new THREE.SphereGeometry(0.28, 12, 10);
+    headGeo.translate(0, 0.6, 0);
+
+    const allyMat = new THREE.MeshStandardMaterial({
+      color: 0x0284c7,
+      roughness: 0.35,
+      metalness: 0.15
+    });
+    const enemyMat = new THREE.MeshStandardMaterial({
+      color: 0xef4444,
+      roughness: 0.35,
+      metalness: 0.15
+    });
+
+    function createCharacterMesh(isAlly = true) {
+      const group = new THREE.Group();
+      const body = new THREE.Mesh(bodyGeo, isAlly ? allyMat : enemyMat);
+      body.castShadow = true;
+      body.position.y = 0.45;
+      const head = new THREE.Mesh(headGeo, isAlly ? allyMat : enemyMat);
+      head.castShadow = true;
+      head.position.y = 0.45;
+      group.add(body);
+      group.add(head);
+      return group;
+    }
+
+    /* --- GAME STATE VARIABLES --- */
+    const playerAnchor = {
+      x: 0,
+      z: 0,
+      targetX: 0
+    };
+
+    let allies = []; // Array of { mesh, targetOffsetX, targetOffsetZ, runPhase }
+    let enemies = []; // Array of { mesh, targetOffsetX, targetOffsetZ, x, z }
+    let gates = []; // Array of GatePair
+    let roadMeshes = [];
+    let goalMesh = null;
+    let enemyCountGoal = 0;
+    let initialEnemyCount = 0;
+    let battleTimer = 0;
+
+    // Input state
+    let isPointerDown = false;
+    let lastPointerX = 0;
+    const keysPressed = {};
+
+    /* --- TEXTURE GENERATOR FOR GATES --- */
+    function createGateTexture(text, isPositive) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+
+      // Gradient background
+      const grad = ctx.createLinearGradient(0, 0, 0, 256);
+      if (isPositive) {
+        grad.addColorStop(0, 'rgba(14, 165, 233, 0.85)');
+        grad.addColorStop(1, 'rgba(2, 132, 199, 0.95)');
+      } else {
+        grad.addColorStop(0, 'rgba(239, 68, 68, 0.85)');
+        grad.addColorStop(1, 'rgba(185, 28, 28, 0.95)');
+      }
+      ctx.fillStyle = grad;
+      ctx.roundRect ? ctx.roundRect(10, 10, 492, 236, 30) : ctx.rect(10, 10, 492, 236);
+      ctx.fill();
+
+      // Border
+      ctx.lineWidth = 12;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+
+      // Text
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 90px "Segoe UI", Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur = 10;
+      ctx.fillText(text, 256, 128);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.needsUpdate = true;
+      return texture;
+    }
+
+    /* --- STAGE REVERSE-ENGINEERING GENERATOR --- */
+    function generateStageData(stageNum) {
+      // 1. Number of gates: 5 to 7
+      const gateCount = 5 + Math.min(2, Math.floor((stageNum - 1) / 2));
+      let pCurrent = 1;
+      const gatePairs = [];
+
+      // We want final player count between 40 and 110 to keep crowd performant and visual impact high
+      let multCount = 0;
+      const maxMults = 3;
+
+      for (let i = 0; i < gateCount; i++) {
+        // Decide candidate operations for the CORRECT gate
+        const isEarly = i < 3;
+        let opType = 'add';
+
+        if (pCurrent < 25 && multCount < maxMults && Math.random() < 0.65) {
+          opType = 'mult';
+        } else if (pCurrent < 45 && multCount < maxMults && Math.random() < 0.4) {
+          opType = 'mult';
+        }
+
+        let correctVal = 0;
+        let correctOp = '+';
+        let pNext = pCurrent;
+
+        if (opType === 'mult') {
+          multCount++;
+          const factor = (pCurrent <= 6 && Math.random() < 0.5) ? 3 : 2;
+          correctOp = '×';
+          correctVal = factor;
+          pNext = pCurrent * factor;
+        } else {
+          // add: 6 to 18
+          const addVal = 6 + Math.floor(Math.random() * 12);
+          correctOp = '+';
+          correctVal = addVal;
+          pNext = pCurrent + addVal;
+        }
+
+        // Generate WRONG gate such that pWrong is strictly less than pNext
+        let wrongOp = '+';
+        let wrongVal = 0;
+        let pWrong = pCurrent;
+
+        if (correctOp === '×') {
+          // For multiply, wrong can be a smaller addition or even subtraction
+          if (pCurrent > 8 && Math.random() < 0.35) {
+            wrongOp = '-';
+            wrongVal = Math.min(pCurrent - 1, 5 + Math.floor(Math.random() * 8));
+            pWrong = pCurrent - wrongVal;
+          } else {
+            wrongOp = '+';
+            wrongVal = Math.max(2, Math.floor(pCurrent * (correctVal - 1) * 0.5));
+            pWrong = pCurrent + wrongVal;
+          }
+        } else {
+          // Correct is addition (+N)
+          if (Math.random() < 0.4 && pCurrent > 6) {
+            wrongOp = '-';
+            wrongVal = Math.min(pCurrent - 1, 3 + Math.floor(Math.random() * 5));
+            pWrong = pCurrent - wrongVal;
+          } else {
+            wrongOp = '+';
+            wrongVal = Math.max(1, correctVal - (3 + Math.floor(Math.random() * 5)));
+            pWrong = pCurrent + wrongVal;
+          }
+        }
+
+        // Ensure strictly pWrong < pNext
+        if (pWrong >= pNext) {
+          wrongOp = '+';
+          wrongVal = Math.max(1, correctVal - 3);
+          pWrong = pCurrent + wrongVal;
+        }
+
+        const isLeftCorrect = Math.random() < 0.5;
+
+        gatePairs.push({
+          z: -(i + 1) * GATE_DISTANCE,
+          left: {
+            op: isLeftCorrect ? correctOp : wrongOp,
+            val: isLeftCorrect ? correctVal : wrongVal,
+            isCorrect: isLeftCorrect
+          },
+          right: {
+            op: !isLeftCorrect ? correctOp : wrongOp,
+            val: !isLeftCorrect ? correctVal : wrongVal,
+            isCorrect: !isLeftCorrect
+          }
+        });
+
+        pCurrent = pNext;
+      }
+
+      // Goal enemies: P_final - margin (margin: 1 to 3)
+      const margin = 1 + Math.floor(Math.random() * 3); // 1, 2, or 3
+      const enemyCount = Math.max(1, pCurrent - margin);
+
+      return {
+        gatePairs,
+        finalPlayerCount: pCurrent,
+        enemyCount,
+        margin,
+        goalZ: -(gateCount + 1) * GATE_DISTANCE
+      };
+    }
+
+    /* --- ENVIRONMENT BUILDING --- */
+    function buildEnvironment(stageData) {
+      // Clear old meshes
+      roadMeshes.forEach(m => scene.remove(m));
+      roadMeshes = [];
+
+      gates.forEach(g => {
+        scene.remove(g.group);
+      });
+      gates = [];
+
+      if (goalMesh) {
+        scene.remove(goalMesh);
+        goalMesh = null;
+      }
+
+      const totalLength = Math.abs(stageData.goalZ) + 60;
+
+      // Main Track Ground
+      const roadGeo = new THREE.PlaneGeometry(ROAD_WIDTH, totalLength);
+      const roadMat = new THREE.MeshStandardMaterial({
+        color: 0x1e293b,
+        roughness: 0.8,
+        metalness: 0.1
+      });
+      const road = new THREE.Mesh(roadGeo, roadMat);
+      road.rotation.x = -Math.PI / 2;
+      road.position.set(0, 0, -totalLength / 2 + 15);
+      road.receiveShadow = true;
+      scene.add(road);
+      roadMeshes.push(road);
+
+      // Road side borders
+      const railGeo = new THREE.BoxGeometry(0.5, 0.6, totalLength);
+      const railMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.4 });
+      const leftRail = new THREE.Mesh(railGeo, railMat);
+      leftRail.position.set(-ROAD_WIDTH / 2, 0.3, road.position.z);
+      leftRail.castShadow = true;
+      scene.add(leftRail);
+      roadMeshes.push(leftRail);
+
+      const rightRail = new THREE.Mesh(railGeo, railMat);
+      rightRail.position.set(ROAD_WIDTH / 2, 0.3, road.position.z);
+      rightRail.castShadow = true;
+      scene.add(rightRail);
+      roadMeshes.push(rightRail);
+
+      // Floor grid line accents
+      const gridHelper = new THREE.GridHelper(ROAD_WIDTH, 7, 0x334155, 0x1e293b);
+      gridHelper.position.set(0, 0.02, road.position.z);
+      gridHelper.scale.set(1, 1, totalLength / ROAD_WIDTH);
+      scene.add(gridHelper);
+      roadMeshes.push(gridHelper);
+
+      // Build Gates
+      const gateWidth = ROAD_WIDTH / 2 - 0.6;
+      const gateHeight = 4.2;
+      const panelGeo = new THREE.PlaneGeometry(gateWidth, gateHeight);
+
+      stageData.gatePairs.forEach((pairData, idx) => {
+        const pairGroup = new THREE.Group();
+        pairGroup.position.set(0, 0, pairData.z);
+
+        // Center divider post
+        const postGeo = new THREE.CylinderGeometry(0.2, 0.2, gateHeight + 1, 8);
+        const postMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.5 });
+        const centerPost = new THREE.Mesh(postGeo, postMat);
+        centerPost.position.set(0, (gateHeight + 1) / 2, 0);
+        pairGroup.add(centerPost);
+
+        // Left Gate
+        const leftText = pairData.left.op + pairData.left.val;
+        const leftIsPositive = pairData.left.op !== '-';
+        const leftTex = createGateTexture(leftText, leftIsPositive);
+        const leftMat = new THREE.MeshBasicMaterial({
+          map: leftTex,
+          transparent: true,
+          opacity: 0.9,
+          side: THREE.DoubleSide
+        });
+        const leftPanel = new THREE.Mesh(panelGeo, leftMat);
+        leftPanel.position.set(-ROAD_WIDTH / 4, gateHeight / 2, 0);
+        pairGroup.add(leftPanel);
+
+        // Right Gate
+        const rightText = pairData.right.op + pairData.right.val;
+        const rightIsPositive = pairData.right.op !== '-';
+        const rightTex = createGateTexture(rightText, rightIsPositive);
+        const rightMat = new THREE.MeshBasicMaterial({
+          map: rightTex,
+          transparent: true,
+          opacity: 0.9,
+          side: THREE.DoubleSide
+        });
+        const rightPanel = new THREE.Mesh(panelGeo, rightMat);
+        rightPanel.position.set(ROAD_WIDTH / 4, gateHeight / 2, 0);
+        pairGroup.add(rightPanel);
+
+        scene.add(pairGroup);
+
+        gates.push({
+          group: pairGroup,
+          z: pairData.z,
+          left: pairData.left,
+          right: pairData.right,
+          passed: false
+        });
+      });
+
+      // Goal Platform & Castle Banner
+      const goalZ = stageData.goalZ;
+      const goalPlatformGeo = new THREE.BoxGeometry(ROAD_WIDTH + 2, 0.3, 20);
+      const goalPlatformMat = new THREE.MeshStandardMaterial({ color: 0x450a0a, roughness: 0.6 });
+      goalMesh = new THREE.Mesh(goalPlatformGeo, goalPlatformMat);
+      goalMesh.position.set(0, 0.15, goalZ - 8);
+      goalMesh.receiveShadow = true;
+      scene.add(goalMesh);
+
+      // Finish line ribbon
+      const finishGeo = new THREE.PlaneGeometry(ROAD_WIDTH, 1.2);
+      const finishMat = new THREE.MeshBasicMaterial({ color: 0xef4444, side: THREE.DoubleSide });
+      const finishLine = new THREE.Mesh(finishGeo, finishMat);
+      finishLine.rotation.x = -Math.PI / 2;
+      finishLine.position.set(0, 0.05, goalZ);
+      scene.add(finishLine);
+      roadMeshes.push(finishLine);
+    }
+
+    /* --- CROWD MANAGEMENT --- */
+    function updateCrowdFormation() {
+      const count = allies.length;
+      if (count === 0) return;
+
+      // Golden ratio spiral distribution
+      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+      const spreadFactor = 0.38;
+
+      allies.forEach((ally, i) => {
+        if (i === 0) {
+          ally.targetOffsetX = 0;
+          ally.targetOffsetZ = 0;
+          return;
+        }
+        const r = Math.sqrt(i) * spreadFactor;
+        const theta = i * goldenAngle;
+        ally.targetOffsetX = r * Math.cos(theta);
+        ally.targetOffsetZ = r * Math.sin(theta);
+      });
+    }
+
+    function addAllies(amount) {
+      for (let i = 0; i < amount; i++) {
+        const mesh = createCharacterMesh(true);
+        // Spawn near the anchor
+        mesh.position.set(
+          playerAnchor.x + (Math.random() - 0.5) * 2,
+          0,
+          playerAnchor.z + (Math.random() - 0.5) * 2
+        );
+        scene.add(mesh);
+        allies.push({
+          mesh,
+          targetOffsetX: 0,
+          targetOffsetZ: 0,
+          runPhase: Math.random() * Math.PI * 2
+        });
+      }
+      updateCrowdFormation();
+    }
+
+    function removeAllies(amount) {
+      const countToRemove = Math.min(amount, allies.length);
+      for (let i = 0; i < countToRemove; i++) {
+        const removed = allies.pop();
+        if (removed) {
+          scene.remove(removed.mesh);
+        }
+      }
+      updateCrowdFormation();
+    }
+
+    function spawnEnemies(count, goalZ) {
+      // Clear existing
+      enemies.forEach(e => scene.remove(e.mesh));
+      enemies = [];
+
+      enemyCountGoal = count;
+      initialEnemyCount = count;
+
+      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+      const spreadFactor = 0.35;
+
+      for (let i = 0; i < count; i++) {
+        const mesh = createCharacterMesh(false);
+        const r = Math.sqrt(i) * spreadFactor;
+        const theta = i * goldenAngle;
+        const x = r * Math.cos(theta);
+        const z = goalZ - 7 + r * Math.sin(theta);
+
+        mesh.position.set(x, 0, z);
+        scene.add(mesh);
+        enemies.push({
+          mesh,
+          baseX: x,
+          baseZ: z,
+          phase: Math.random() * Math.PI * 2
+        });
+      }
+
+      document.getElementById('hud-enemy').textContent = `GOAL ENEMY: ${count}`;
+    }
+
+    /* --- STAGE INITIALIZATION --- */
+    let currentStageData = null;
+
+    function initStage(stageNum) {
+      currentStage = stageNum;
+      document.getElementById('hud-stage').textContent = `STAGE ${currentStage}`;
+
+      // Reset anchor
+      playerAnchor.x = 0;
+      playerAnchor.targetX = 0;
+      playerAnchor.z = 0;
+
+      // Clear allies
+      allies.forEach(a => scene.remove(a.mesh));
+      allies = [];
+
+      // Generate Stage & Build
+      currentStageData = generateStageData(stageNum);
+      buildEnvironment(currentStageData);
+
+      // Spawn 1 player ally
+      addAllies(1);
+
+      // Spawn Enemies at Goal
+      spawnEnemies(currentStageData.enemyCount, currentStageData.goalZ);
+
+      // Camera init
+      camera.position.set(0, 8, 12);
+      camera.lookAt(0, 1.5, 0);
+
+      // Reset states
+      gameState = 'RUNNING';
+      battleTimer = 0;
+
+      // Update UI
+      document.getElementById('modal-result').classList.remove('active');
+      document.getElementById('crowd-count-num').textContent = '1';
+    }
+
+    /* --- INPUT HANDLING --- */
+    window.addEventListener('resize', onWindowResize);
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // Pointer events
+    window.addEventListener('pointerdown', (e) => {
+      isPointerDown = true;
+      lastPointerX = e.clientX;
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (gameState !== 'RUNNING') return;
+      if (isPointerDown) {
+        const deltaX = (e.clientX - lastPointerX) * 0.022;
+        playerAnchor.targetX += deltaX;
+        lastPointerX = e.clientX;
+      } else {
+        // Hover drag style (mouse tracking across screen)
+        const normalizedX = (e.clientX / window.innerWidth) * 2 - 1;
+        playerAnchor.targetX = normalizedX * ROAD_BOUND_X;
+      }
+      playerAnchor.targetX = Math.max(-ROAD_BOUND_X, Math.min(ROAD_BOUND_X, playerAnchor.targetX));
+    });
+
+    window.addEventListener('pointerup', () => { isPointerDown = false; });
+    window.addEventListener('pointercancel', () => { isPointerDown = false; });
+
+    // Keyboard events
+    window.addEventListener('keydown', (e) => {
+      keysPressed[e.key.toLowerCase()] = true;
+    });
+    window.addEventListener('keyup', (e) => {
+      keysPressed[e.key.toLowerCase()] = false;
+    });
+
+    function processKeyboardInput(dt) {
+      const moveSpeed = 16 * dt;
+      if (keysPressed['arrowleft'] || keysPressed['a']) {
+        playerAnchor.targetX -= moveSpeed;
+      }
+      if (keysPressed['arrowright'] || keysPressed['d']) {
+        playerAnchor.targetX += moveSpeed;
+      }
+      playerAnchor.targetX = Math.max(-ROAD_BOUND_X, Math.min(ROAD_BOUND_X, playerAnchor.targetX));
+    }
+
+    /* --- GATE CHECKING --- */
+    function checkGateCollisions() {
+      gates.forEach(gate => {
+        if (!gate.passed && playerAnchor.z <= gate.z) {
+          gate.passed = true;
+          // Determine left or right based on anchor X
+          const chosenGate = (playerAnchor.x < 0) ? gate.left : gate.right;
+          applyGateFormula(chosenGate);
+
+          // Animate gate collapse/fade
+          gate.group.position.y -= 0.5;
+          gate.group.children.forEach(child => {
+            if (child.material) child.material.opacity = 0.25;
+          });
+        }
+      });
+    }
+
+    function applyGateFormula(gateOption) {
+      const currentCount = allies.length;
+      let newCount = currentCount;
+
+      if (gateOption.op === '+') {
+        newCount = currentCount + gateOption.val;
+      } else if (gateOption.op === '-') {
+        newCount = Math.max(0, currentCount - gateOption.val);
+      } else if (gateOption.op === '×') {
+        newCount = currentCount * gateOption.val;
+      }
+
+      const diff = newCount - currentCount;
+      if (diff > 0) {
+        addAllies(diff);
+      } else if (diff < 0) {
+        removeAllies(Math.abs(diff));
+      }
+
+      document.getElementById('crowd-count-num').textContent = allies.length;
+
+      // Instant game over if wiped out on track
+      if (allies.length <= 0) {
+        triggerGameOver(0);
+      }
+    }
+
+    /* --- BATTLE & GAME OVER / WIN --- */
+    function triggerGameOver(remainingAllies) {
+      gameState = 'RESULT';
+      const modal = document.getElementById('modal-result');
+      const title = document.getElementById('result-title');
+      const desc = document.getElementById('result-desc');
+      const btn = document.getElementById('btn-retry');
+
+      title.textContent = 'GAME OVER';
+      title.className = 'modal-title lose';
+      desc.textContent = '軍勢が全滅しました…！ゲート選択で1つでもハズレを選ぶと勝てません！';
+
+      document.getElementById('stat-allies').textContent = remainingAllies;
+      document.getElementById('stat-enemies').textContent = initialEnemyCount - enemies.length;
+
+      btn.textContent = 'RETRY STAGE';
+      btn.onclick = () => initStage(currentStage);
+
+      modal.classList.add('active');
+    }
+
+    function triggerVictory(remainingAllies) {
+      gameState = 'RESULT';
+      const modal = document.getElementById('modal-result');
+      const title = document.getElementById('result-title');
+      const desc = document.getElementById('result-desc');
+      const btn = document.getElementById('btn-retry');
+
+      title.textContent = 'STAGE CLEAR!';
+      title.className = 'modal-title win';
+      desc.textContent = `残数わずか ${remainingAllies} 体！完璧なルート選択によるギリギリの奇跡的勝利です！`;
+
+      document.getElementById('stat-allies').textContent = remainingAllies;
+      document.getElementById('stat-enemies').textContent = initialEnemyCount;
+
+      btn.textContent = 'NEXT STAGE';
+      btn.onclick = () => initStage(currentStage + 1);
+
+      modal.classList.add('active');
+    }
+
+    /* --- UI UPDATE: FLOATING COUNT --- */
+    const countTagContainer = document.getElementById('count-display-container');
+    const countTagNum = document.getElementById('crowd-count-num');
+    const tempVec3 = new THREE.Vector3();
+
+    function updateFloatingUI() {
+      if (allies.length === 0 || gameState === 'RESULT') {
+        countTagContainer.style.display = 'none';
+        return;
+      }
+      countTagContainer.style.display = 'block';
+      countTagNum.textContent = allies.length;
+
+      // Project anchor position + Y offset to 2D screen coords
+      tempVec3.set(playerAnchor.x, 2.2, playerAnchor.z);
+      tempVec3.project(camera);
+
+      const screenX = (tempVec3.x * 0.5 + 0.5) * window.innerWidth;
+      const screenY = (-(tempVec3.y * 0.5) + 0.5) * window.innerHeight;
+
+      countTagContainer.style.left = `${screenX}px`;
+      countTagContainer.style.top = `${screenY}px`;
+    }
+
+    /* --- MAIN LOOP --- */
+    let lastTime = performance.now();
+
+    function animate(currentTime) {
+      requestAnimationFrame(animate);
+
+      const dt = Math.min((currentTime - lastTime) / 1000, 0.1);
+      lastTime = currentTime;
+
+      if (gameState === 'RUNNING') {
+        processKeyboardInput(dt);
+
+        // Advance Anchor
+        playerAnchor.z -= RUN_SPEED * dt;
+        playerAnchor.x += (playerAnchor.targetX - playerAnchor.x) * STEER_LERP;
+
+        // Check Gates
+        checkGateCollisions();
+
+        // Check Goal Reached
+        if (currentStageData && playerAnchor.z <= currentStageData.goalZ) {
+          gameState = 'BATTLE';
+        }
+
+        // Animate Allies Run Cycle & Smooth Positioning
+        allies.forEach(ally => {
+          ally.runPhase += dt * 14;
+          const targetWorldX = playerAnchor.x + ally.targetOffsetX;
+          const targetWorldZ = playerAnchor.z + ally.targetOffsetZ;
+
+          ally.mesh.position.x += (targetWorldX - ally.mesh.position.x) * 0.22;
+          ally.mesh.position.z += (targetWorldZ - ally.mesh.position.z) * 0.22;
+          // Running bobbing bounce
+          ally.mesh.position.y = Math.abs(Math.sin(ally.runPhase)) * 0.25;
+          ally.mesh.rotation.y = 0;
+          ally.mesh.rotation.z = Math.sin(ally.runPhase) * 0.08;
+        });
+
+        // Idle bobbing for enemies waiting at goal
+        enemies.forEach(enemy => {
+          enemy.phase += dt * 4;
+          enemy.mesh.position.y = Math.abs(Math.sin(enemy.phase)) * 0.1;
+        });
+
+        // Smooth Camera Follow
+        const camTargetX = playerAnchor.x * 0.45;
+        const camTargetZ = playerAnchor.z + 12;
+        camera.position.x += (camTargetX - camera.position.x) * 0.15;
+        camera.position.z += (camTargetZ - camera.position.z) * 0.2;
+        camera.position.y = 8 + Math.min(4, Math.sqrt(allies.length) * 0.35); // dynamic height based on crowd size
+        camera.lookAt(playerAnchor.x * 0.3, 1.2, playerAnchor.z - 6);
+
+      } else if (gameState === 'BATTLE') {
+        // High-speed clash animation
+        battleTimer += dt;
+        const stepInterval = 1 / BATTLE_RATE;
+
+        while (battleTimer >= stepInterval && (allies.length > 0 && enemies.length > 0)) {
+          battleTimer -= stepInterval;
+
+          // Annihilate 1 ally and 1 enemy simultaneously
+          const allyToRemove = allies.pop();
+          const enemyToRemove = enemies.pop();
+
+          if (allyToRemove) scene.remove(allyToRemove.mesh);
+          if (enemyToRemove) scene.remove(enemyToRemove.mesh);
+
+          document.getElementById('crowd-count-num').textContent = allies.length;
+          document.getElementById('hud-enemy').textContent = `GOAL ENEMY: ${enemies.length}`;
+        }
+
+        // Camera dramatic focus on battle line
+        camera.position.z += ((currentStageData.goalZ + 8) - camera.position.z) * 0.08;
+        camera.lookAt(0, 1.0, currentStageData.goalZ - 4);
+
+        // Check Battle End
+        if (enemies.length === 0) {
+          triggerVictory(allies.length);
+        } else if (allies.length === 0) {
+          triggerGameOver(0);
+        }
+      }
+
+      // UI Floating tag update
+      updateFloatingUI();
+
+      // Render Scene
+      renderer.render(scene, camera);
+    }
+
+    /* --- START BUTTON EVENT --- */
+    document.getElementById('btn-start').addEventListener('click', () => {
+      document.getElementById('start-overlay').style.display = 'none';
+      initStage(1);
+    });
+
+    // Start request loop
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
