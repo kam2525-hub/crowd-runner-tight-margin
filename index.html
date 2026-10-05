@@ -6,7 +6,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Crowd Runner: Tight Margin (v1.3 - Extreme)</title>
+  <title>Crowd Runner: Tight Margin (v1.4 - Boss Overhead HP)</title>
   <style>
     * {
       box-sizing: border-box;
@@ -72,7 +72,6 @@
     }
     .stage-badge { color: #38bdf8; }
     .coin-badge { color: #fbbf24; }
-    .boss-badge { color: #f87171; }
     .biome-badge { color: #a855f7; font-size: 11px; }
 
     .btn-icon {
@@ -163,40 +162,58 @@
     }
     @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.15); } }
 
-    /* BOSS HP BAR */
-    #boss-hp-container {
+    /* BOSS OVERHEAD FLOATING HP (3D Screen-Tracking) */
+    #boss-floating-hp {
       position: absolute;
-      top: 102px;
-      left: 50%;
-      transform: translateX(-50%);
+      transform: translate(-50%, -100%);
+      pointer-events: none;
       display: none;
       flex-direction: column;
       align-items: center;
-      pointer-events: none;
-      z-index: 50;
+      z-index: 60;
+      transition: opacity 0.2s ease;
     }
-    .boss-name {
-      color: #ef4444;
-      font-weight: 900;
-      font-size: 17px;
-      letter-spacing: 2px;
-      text-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
-      margin-bottom: 5px;
-    }
-    .boss-hp-bg {
-      width: 280px;
-      height: 16px;
-      background: rgba(15, 23, 42, 0.85);
+    .boss-floating-card {
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(8px);
       border: 2px solid #ef4444;
+      border-radius: 14px;
+      padding: 6px 14px;
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 170px;
+    }
+    .boss-floating-name {
+      color: #fca5a5;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+    }
+    .boss-floating-hp-num {
+      color: #ef4444;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .boss-hp-track {
+      width: 100%;
+      height: 10px;
+      background: rgba(0, 0, 0, 0.6);
       border-radius: 9999px;
       overflow: hidden;
-      box-shadow: 0 0 18px rgba(239, 68, 68, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
     .boss-hp-fill {
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, #ef4444, #f87171);
-      transition: width 0.1s ease;
+      background: linear-gradient(90deg, #dc2626, #ef4444, #f87171);
+      transition: width 0.12s ease-out;
     }
 
     /* Player Count floating banner */
@@ -481,7 +498,6 @@
         <div class="badge coin-badge">🪙 <span id="hud-coins">0</span></div>
       </div>
       <div class="hud-group">
-        <div class="badge boss-badge" id="hud-enemy">MEGA BOSS: ??</div>
         <button class="btn-icon" id="btn-sound-toggle" title="サウンド切替">🔊</button>
       </div>
     </div>
@@ -497,11 +513,16 @@
       <div class="fever-text" id="fever-text">COMBO: 0 / 3</div>
     </div>
 
-    <!-- BOSS HP BAR -->
-    <div id="boss-hp-container">
-      <div class="boss-name" id="boss-name">TITAN GOLEM</div>
-      <div class="boss-hp-bg">
-        <div class="boss-hp-fill" id="boss-hp-fill"></div>
+    <!-- BOSS OVERHEAD FLOATING HP (Tracks Boss Head in 3D) -->
+    <div id="boss-floating-hp">
+      <div class="boss-floating-card">
+        <div class="boss-floating-name">
+          <span id="boss-floating-title">TITAN GOLEM</span>
+          <span class="boss-floating-hp-num"><span id="boss-hp-text">50</span> HP</span>
+        </div>
+        <div class="boss-hp-track">
+          <div class="boss-hp-fill" id="boss-hp-fill"></div>
+        </div>
       </div>
     </div>
 
@@ -523,9 +544,9 @@
     <p>手足を振って走る群衆を率い、新アイテムを駆使して巨大ボスを討伐せよ！</p>
     
     <div class="rule-box">
+      ・<strong>ボス頭上HPゲージ</strong>：ボスの頭上にダイナミックHPバーを表示！残数を直接確認！<br>
       ・<strong>3大バイオーム</strong>：ステージ進行でサイバー・灼熱マグマ・宇宙空間へ変化！<br>
       ・<strong>特殊アイテムスフィア</strong>：🧲磁石（コイン吸引）、🛡️シールド（トラップ無効）、🔫ブラスター（前方トラップ狙撃）！<br>
-      ・<strong>ボス衝撃波スマッシュ</strong>：メガボスの地面叩きつけ衝撃波を左右回避！<br>
       ・<strong>クリアボーナス階段</strong>：討伐後に生き残った味方が階段を登りコイン倍率（最大×5.0）UP！
     </div>
 
@@ -822,7 +843,7 @@
 
     let currentStage = 1;
     let currentBiome = BIOMES[0];
-    let gameState = 'START'; // 'START' | 'RUNNING' | 'BATTLE_MINIONS' | 'BATTLE_BOSS' | 'STAIRS' | 'RESULT'
+    let gameState = 'START';
 
     // Fever System State
     let feverCombo = 0;
@@ -1112,7 +1133,6 @@
         b.life -= dt;
         b.mesh.position.z -= 90 * dt;
 
-        // Check trap hit
         traps.forEach(trap => {
           if (!trap.destroyed) {
             const dx = b.mesh.position.x - trap.x;
@@ -1162,11 +1182,9 @@
         sw.mesh.scale.set(sw.radius, sw.radius, 1);
         sw.mesh.material.opacity = sw.life * 0.45;
 
-        // Check damage to player
         if (gameState === 'RUNNING' && Math.abs(playerAnchor.z - sw.mesh.position.z) < 1.5) {
           const dx = Math.abs(playerAnchor.x - sw.mesh.position.x);
           if (dx < sw.radius && dx > sw.radius - 2.0) {
-            // Hit by shockwave edge!
             if (!activePowerups.shield && allies.length > 2) {
               removeAllies(2);
               sound.hitTrap();
@@ -1466,7 +1484,7 @@
         });
       });
 
-      // Rotating Bar Traps, Coins & Powerup Item Spheres
+      // Rotating Bar Traps, Coins & Powerup Items
       const coinGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.12, 16);
       coinGeo.rotateX(Math.PI / 2);
       const coinMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.8, roughness: 0.2 });
@@ -1478,7 +1496,6 @@
         const midZ = -(i + 0.5) * GATE_DISTANCE;
         const pair = stageData.gatePairs[i];
 
-        // Traps
         const trapCount = pair.isFork ? 2 : 1;
         for (let t = 0; t < trapCount; t++) {
           const trapGroup = new THREE.Group();
@@ -1512,7 +1529,6 @@
           });
         }
 
-        // Coins
         const coinCount = pair.isFork ? 6 : 3;
         const coinPatternX = pair.isFork ? (pair.isLeftCorrect ? -ROAD_WIDTH / 4 : ROAD_WIDTH / 4) : ((Math.random() - 0.5) * 6);
         for (let c = 0; c < coinCount; c++) {
@@ -1522,7 +1538,6 @@
           coins.push({ mesh: coinMesh, collected: false });
         }
 
-        // Spawn 1 Powerup Sphere in select gaps
         if (i % 2 === 1) {
           const type = powerupTypes[i % powerupTypes.length];
           const sphereGeo = new THREE.DodecahedronGeometry(0.5, 0);
@@ -1551,7 +1566,7 @@
       scene.add(finishLine);
       roadMeshes.push(finishLine);
 
-      // Build Multiplier Bonus Stairs behind the Boss arena
+      // Multiplier Bonus Stairs
       const stairBaseZ = goalZ - 24;
       const multipliers = [1.2, 1.5, 2.0, 3.0, 5.0];
       const stairColors = [0x38bdf8, 0x10b981, 0xfbbf24, 0xf97316, 0xec4899];
@@ -1725,7 +1740,6 @@
       document.getElementById('hud-stage').textContent = `STAGE ${currentStage}`;
       document.getElementById('hud-biome').textContent = currentBiome.name;
 
-      // Update Scene Background & Fog
       scene.background.setHex(currentBiome.bg);
       scene.fog.color.setHex(currentBiome.bg);
       scene.fog.near = currentBiome.fogNear;
@@ -1750,9 +1764,10 @@
       addAllies(saveData.initialCrowdCount);
       spawnMinions(currentStageData.minionCount, currentStageData.goalZ);
 
-      document.getElementById('hud-enemy').textContent = `MEGA BOSS: ${bossHp} HP`;
-      document.getElementById('boss-hp-container').style.display = 'none';
+      // Boss Overhead Floating HP initialization
+      document.getElementById('boss-hp-text').textContent = bossHp;
       document.getElementById('boss-hp-fill').style.width = '100%';
+      document.getElementById('boss-floating-hp').style.display = 'flex';
       document.getElementById('stairs-banner').style.display = 'none';
 
       camera.position.set(0, 8, 12);
@@ -1898,7 +1913,6 @@
             saveToStorage();
             updateCoinHUD();
           } else if (activePowerups.shield) {
-            // Shield absorbed hit!
             activePowerups.shield = false;
             updatePowerupUI();
             sound.smashTrap();
@@ -1925,7 +1939,6 @@
           const dz = playerAnchor.z - coin.mesh.position.z;
           const dist = Math.sqrt(dx * dx + dz * dz);
 
-          // Magnet suction
           if (activePowerups.magnetTimer > 0 && dist < 12.0) {
             coin.mesh.position.x += (playerAnchor.x - coin.mesh.position.x) * 0.15;
             coin.mesh.position.z += (playerAnchor.z - coin.mesh.position.z) * 0.15;
@@ -1978,6 +1991,8 @@
       gameState = 'RESULT';
       sound.loseSound();
 
+      document.getElementById('boss-floating-hp').style.display = 'none';
+
       const modal = document.getElementById('modal-result');
       const title = document.getElementById('result-title');
       const desc = document.getElementById('result-desc');
@@ -2001,6 +2016,8 @@
       gameState = 'RESULT';
       sound.winFanfare();
 
+      document.getElementById('boss-floating-hp').style.display = 'none';
+
       const modal = document.getElementById('modal-result');
       const title = document.getElementById('result-title');
       const desc = document.getElementById('result-desc');
@@ -2008,10 +2025,9 @@
 
       title.textContent = 'MEGA BOSS DEFEATED!';
       title.className = 'modal-title win';
-      desc.textContent = `残数 ${remainingAllies} 体でメガボスを討伐し、ボーナス階段でコイン ×${multiplier} 倍を獲得しました！`;
+      desc.textContent = `残数 ${remainingAllies} 体でメガボスを討伐し、ボーナス階段でコイン ×${multiplier.toFixed(1)} 倍を獲得しました！`;
 
       const totalCoins = Math.floor(stageCoinsCollected * multiplier);
-      // Award bonus coins
       const bonus = totalCoins - stageCoinsCollected;
       if (bonus > 0) {
         saveData.coins += bonus;
@@ -2029,27 +2045,56 @@
       modal.classList.add('active');
     }
 
-    /* --- FLOATING TAG UPDATE --- */
+    /* --- FLOATING UI UPDATES (PLAYER COUNT & BOSS OVERHEAD HP) --- */
     const countTagContainer = document.getElementById('count-display-container');
     const countTagNum = document.getElementById('crowd-count-num');
+    const bossFloatingHp = document.getElementById('boss-floating-hp');
     const tempVec3 = new THREE.Vector3();
+    const bossVec3 = new THREE.Vector3();
 
     function updateFloatingUI() {
+      // 1. Player crowd count
       if (allies.length === 0 || gameState === 'RESULT') {
         countTagContainer.style.display = 'none';
-        return;
+      } else {
+        countTagContainer.style.display = 'block';
+        countTagNum.textContent = allies.length;
+
+        tempVec3.set(playerAnchor.x, 2.6, playerAnchor.z);
+        tempVec3.project(camera);
+
+        const screenX = (tempVec3.x * 0.5 + 0.5) * window.innerWidth;
+        const screenY = (-(tempVec3.y * 0.5) + 0.5) * window.innerHeight;
+
+        countTagContainer.style.left = `${screenX}px`;
+        countTagContainer.style.top = `${screenY}px`;
       }
-      countTagContainer.style.display = 'block';
-      countTagNum.textContent = allies.length;
 
-      tempVec3.set(playerAnchor.x, 2.6, playerAnchor.z);
-      tempVec3.project(camera);
+      // 2. Boss Overhead HP Floating Bar
+      if (!megaBoss || gameState === 'RESULT' || gameState === 'STAIRS' || bossHp <= 0) {
+        bossFloatingHp.style.display = 'none';
+      } else {
+        // Boss head is around Y = 10.6
+        bossVec3.set(megaBoss.root.position.x, 10.8, megaBoss.root.position.z);
+        bossVec3.project(camera);
 
-      const screenX = (tempVec3.x * 0.5 + 0.5) * window.innerWidth;
-      const screenY = (-(tempVec3.y * 0.5) + 0.5) * window.innerHeight;
+        // Check if boss is in front of camera
+        if (bossVec3.z < 1.0) {
+          bossFloatingHp.style.display = 'flex';
+          const bossScreenX = (bossVec3.x * 0.5 + 0.5) * window.innerWidth;
+          const bossScreenY = (-(bossVec3.y * 0.5) + 0.5) * window.innerHeight;
 
-      countTagContainer.style.left = `${screenX}px`;
-      countTagContainer.style.top = `${screenY}px`;
+          bossFloatingHp.style.left = `${bossScreenX}px`;
+          bossFloatingHp.style.top = `${bossScreenY}px`;
+
+          // Scale floating bar based on distance to camera
+          const distToCam = camera.position.distanceTo(megaBoss.root.position);
+          const scale = Math.max(0.65, Math.min(1.2, 35 / distToCam));
+          bossFloatingHp.style.transform = `translate(-50%, -100%) scale(${scale})`;
+        } else {
+          bossFloatingHp.style.display = 'none';
+        }
+      }
     }
 
     /* ============================================================
@@ -2077,7 +2122,6 @@
         }
       });
 
-      // Timers
       if (isFeverActive) {
         feverTimer -= dt;
         if (feverTimer <= 0) {
@@ -2114,7 +2158,6 @@
         checkCoinCollisions();
         checkPowerupCollisions();
 
-        // Random Boss Shockwaves when approaching goal
         if (currentStageData && playerAnchor.z < currentStageData.goalZ + 80) {
           shockwaveCooldown -= dt;
           if (shockwaveCooldown <= 0) {
@@ -2125,7 +2168,6 @@
 
         if (currentStageData && playerAnchor.z <= currentStageData.goalZ) {
           gameState = 'BATTLE_MINIONS';
-          document.getElementById('boss-hp-container').style.display = 'flex';
           sound.bossRoar();
         }
 
@@ -2223,7 +2265,7 @@
           if (attacker) {
             bossHp--;
             document.getElementById('boss-hp-fill').style.width = `${(bossHp / bossMaxHp) * 100}%`;
-            document.getElementById('hud-enemy').textContent = `MEGA BOSS: ${bossHp} HP`;
+            document.getElementById('boss-hp-text').textContent = bossHp;
 
             spawnBurst(megaBoss.root.position.x + (Math.random() - 0.5) * 3, 4 + Math.random() * 3, megaBoss.root.position.z + 1, 0xef4444, 8, 1.2);
             scene.remove(attacker.charObj.root);
@@ -2240,11 +2282,9 @@
         camera.lookAt(0, 4.5, currentStageData.goalZ - 18);
 
         if (bossHp <= 0) {
-          // Boss explosion
           spawnBurst(megaBoss.root.position.x, 5, megaBoss.root.position.z, 0xf59e0b, 35, 2.8);
           scene.remove(megaBoss.root);
 
-          // Transition to Bonus Multiplier Stairs!
           gameState = 'STAIRS';
           battleTimer = 0;
         } else if (allies.length === 0) {
@@ -2252,10 +2292,7 @@
         }
 
       } else if (gameState === 'STAIRS') {
-        // Survivors run up the stairs
         battleTimer += dt;
-
-        // March survivors forward
         playerAnchor.z -= 18 * dt;
 
         allies.forEach(ally => {
@@ -2264,7 +2301,6 @@
           root.position.z = playerAnchor.z + ally.targetOffsetZ;
           root.position.x = ally.targetOffsetX * 0.5;
 
-          // Height according to stair step
           let stepHeight = 0;
           stairSteps.forEach(s => {
             if (root.position.z <= s.z + 3) {
@@ -2275,7 +2311,6 @@
           root.position.y = stepHeight + Math.abs(Math.sin(ally.runPhase)) * 0.2;
         });
 
-        // Banner update
         const banner = document.getElementById('stairs-banner');
         banner.style.display = 'block';
         banner.textContent = `×${finalMultiplier.toFixed(1)} BONUS!`;
